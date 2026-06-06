@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Aplikasi Qurban</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; max-width: 100%;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* ==========================================
+       VARIABEL WARNA - DARK MODE (DEFAULT)
+    ========================================== */
+    :root {
+      --bg-body: #121A29;
+      --bg-card: #1E293B;
+      --bg-input: #334155;
+      --text-color: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border-color: #475569;
+      --shadow-color: rgba(0, 0, 0, 0.25);
+      --btn-bg: rgba(22, 93, 255, 0.15);
+      --btn-color: #74A6FF;
+      --grad-1: #165DFF;
+      --grad-2: #4080FF;
+    }
+
+    /* ==========================================
+       VARIABEL WARNA - LIGHT MODE
+    ========================================== */
+    body.light-mode {
+      --bg-body: #f5f7fa;
+      --bg-card: #ffffff;
+      --bg-input: #f9fafb;
+      --text-color: #1a1a1a;
+      --text-muted: #7a7a7a;
+      --border-color: #e5e7eb;
+      --shadow-color: rgba(0, 0, 0, 0.08);
+      --btn-bg: #f0f4ff;
+      --btn-color: #165DFF;
+      --grad-1: #165DFF;
+      --grad-2: #4080FF;
+    }
+
+    body {
+      background: var(--bg-body);
+    }
+
+    input, button, select, textarea { font-size: 16px !important; touch-action: manipulation; }
+
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+    button { min-height: 48px; cursor: pointer; border: none; transition: all 0.2s ease; }
+
+    .fade-in { animation: fadeIn .2s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .sheet-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 999;
+    }
+    .sheet-box {
+      background: var(--bg-card);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px 32px;
+      width: 100%; max-width: 480px;
+      animation: sheetUp .28s ease-out;
+      color: var(--text-color);
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .kartu-cari {
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      border-radius: 8px;
+      transition: background 0.2s;
+      color: var(--text-color);
+    }
+    .kartu-cari:last-child { border-bottom: none; }
+    .kartu-cari:hover { background: rgba(148, 163, 184, 0.1); }
+
+    .btn-fullscreen {
+      width: 42px;
+      height: 42px;
+      background: var(--btn-bg);
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      color: var(--btn-color);
+      font-size: 18px;
+      box-shadow: 0 2px 8px var(--shadow-color);
+      margin-top: 10px;
+    }
+    .btn-fullscreen:hover {
+      background: rgba(22, 93, 255, 0.25);
+      transform: scale(1.05);
+    }
+
+    /* ✅ TOGGLE SWITCH GESER KIRI-KANAN */
+    .toggle-switch {
+      position: relative;
+      width: 64px;
+      height: 36px;
+      display: inline-block;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--btn-bg);
+      border: 1px solid rgba(22, 93, 255, 0.2);
+      border-radius: 18px;
+      transition: 0.3s ease;
+      box-shadow: inset 0 2px 4px var(--shadow-color);
+    }
+    /* Lingkaran geser */
+    .toggle-slider::before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      border-radius: 50%;
+      transition: 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 2;
+    }
+    /* Ikon di dalam switch */
+    .icon-light, .icon-dark {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      z-index: 1;
+    }
+    .icon-light {
+      left: 8px;
+      color: var(--text-muted);
+    }
+    .icon-dark {
+      right: 8px;
+      color: var(--btn-color);
+      opacity: 0.5;
+    }
+    /* Kondisi saat aktif (Dark Mode = Default / Checked) */
+    input:checked + .toggle-slider::before {
+      transform: translateX(28px);
+    }
+    input:checked + .toggle-slider .icon-dark {
+      opacity: 1;
+    }
+    input:checked + .toggle-slider .icon-light {
+      opacity: 0.5;
+    }
+    /* Kondisi Light Mode (Tidak aktif) */
+    input:not(:checked) + .toggle-slider .icon-light {
+      opacity: 1;
+    }
+    input:not(:checked) + .toggle-slider .icon-dark {
+      opacity: 0.5;
+    }
+
+    /* ✅ STYLE PROGRES KEKINIAN */
+    .progress-card {
+      border-radius: 16px !important;
+      padding: 14px 12px !important;
+      text-align: center;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .progress-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      letter-spacing: 0.2px;
+    }
+    .progress-card .angka {
+      font-size: 13px;
+      opacity: 0.92;
+      margin: 2px 0;
+      font-weight: 500;
+    }
+    .progress-card .persen {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      opacity: 0.95;
+    }
+    .progress-bar-bg {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 8px;
+      width: 100%;
+      background: rgba(255,255,255,0.22);
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 8px;
+      border-radius: 0 0 16px 16px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ✅ WARNA BARU YANG LEBIH KEKINIAN */
+    .grad-ok {
+      background: linear-gradient(135deg, #36D399 0%, #00B42A 100%);
+    }
+    .grad-setengah {
+      background: linear-gradient(135deg, #FFB74D 0%, #FF7D00 100%);
+    }
+    .grad-kurang {
+      background: linear-gradient(135deg, #FF8080 0%, #F53F3F 100%);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      box-shadow: 0 4px 16px var(--shadow-color);
+      color: var(--text-color);
+    }
+
+    input {
+      background: var(--bg-input) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-color) !important;
+    }
+    input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ✅ STYLE KHUSUS POPUP KONFIRMASI SESUAI PERMINTAAN */
+    .isi-konfirmasi {
+      font-size: 15px;
+      line-height: 1.7;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 10px 0 20px 0;
+      padding: 12px;
+      background: var(--bg-input);
+      border-radius: 8px;
+      text-align: left;
+      white-space: pre-line; /* Supaya baris baru sesuai teks */
+    }
+
+    /* ✅ STYLE LINK ABOUT */
+    .link-about {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .link-about a {
+      color: var(--btn-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .link-about a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ LOGIN ═══════════ -->
+  <div id="halamanLogin"
+    style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;position:relative">
+
+    <div class="card" style="padding:28px;width:100%;max-width:400px">
+
+      <div style="text-align:center;margin-bottom:32px">
+        <div style="width:68px;height:68px;background:linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 12px rgba(22, 93, 255, 0.2)">
+          <i class="fa fa-shield" style="color:#fff;font-size:32px"></i>
+        </div>
+        <div style="font-size:21px;font-weight:700;color:var(--text-color)">Login Petugas</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Sistem Distribusi Qurban</div>
+        
+        <!-- ✅ BARIS TOMBOL: FULL SCREEN + TOGGLE GESER -->
+        <div style="display:flex;align-items:center;justify-content:center">
+          <button onclick="toggleFullScreen()" class="btn-fullscreen">
+            <i class="fa fa-expand"></i>
+          </button>
+
+          <!-- Toggle Geser: Kiri=Light, Kanan=Dark (Default Kanan) -->
+          <div class="toggle-switch">
+            <input type="checkbox" id="modeToggleLogin" checked> <!-- Default checked = Kanan/Dark -->
+            <label class="toggle-slider" for="modeToggleLogin">
+              <span class="icon-light"><i class="fa fa-sun-o"></i></span>
+              <span class="icon-dark"><i class="fa fa-moon-o"></i></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;color:var(--text-color);margin-bottom:6px">Username</label>
+          <div style="position:relative">
+            <i class="fa fa-user" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"></i>
+            <input type="text" id="user" autocomplete="username"
+              style="width:100%;padding:14px 14px 14px 42px;border:1.5px solid var(--border-color);border-radius:14px;outline:none;transition:border 0.2s"
+              placeholder="Masukkan Username"
+              onfocus="this.style.borderColor='#165DFF'"
+              onblur="this.style.borderColor='var(--border-color)'">
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;color:var(--text-color);margin-bottom:6px">Password</label>
+          <div style="position:relative">
+            <i class="fa fa-lock" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"></i>
+            <input type="password" id="pass" autocomplete="current-password"
+              style="width:100%;padding:14px 14px 42px;border:1.5px solid var(--border-color);border-radius:14px;outline:none;transition:border 0.2s"
+              placeholder="Masukkan Password"
+              onfocus="this.style.borderColor='#165DFF'"
+              onblur="this.style.borderColor='var(--border-color)'">
+          </div>
+        </div>
+        <button onclick="loginAkun()"
+          style="width:100%;background:linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);color:#fff;border-radius:14px;padding:14px;font-weight:700;font-size:15px;margin-top:8px;box-shadow:0 4px 12px rgba(22, 93, 255, 0.2)">
+          <i class="fa fa-sign-in" style="margin-right:8px"></i>MASUK SISTEM
+        </button>
+
+        <!-- ✅ LINK ABOUT DITAMBAHKAN DI SINI -->
+        <div class="link-about">
+          <a href="http://lynk.id/admin/" target="_blank">About</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ HALAMAN UTAMA ═══════════ -->
+  <div id="halamanUtama" style="display:none;flex-direction:column;min-height:100vh">
+
+    <div style="background:linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);color:#fff;padding:16px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;box-shadow:0 4px 16px rgba(22, 93, 255, 0.2)">
+      <div>
+        <div style="font-weight:700;font-size:18px">🐑 Distribusi Qurban</div>
+        <div id="namaPetugas" style="font-size:12px;opacity:.85;margin-top:2px">Petugas</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        
+        <!-- ✅ TOGGLE SWITCH DI HEADER UTAMA -->
+        <div class="toggle-switch">
+          <input type="checkbox" id="modeToggleMain" checked>
+          <label class="toggle-slider" for="modeToggleMain">
+            <span class="icon-light"><i class="fa fa-sun-o"></i></span>
+            <span class="icon-dark"><i class="fa fa-moon-o"></i></span>
+          </label>
+        </div>
+
+        <button onclick="toggleFullScreen()"
+          style="width:42px;height:42px;background:rgba(255,255,255,.18);backdrop-filter:blur(4px);border-radius:12px;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center">
+          <i class="fa fa-expand"></i>
+        </button>
+        <button onclick="keluarAkun()"
+          style="width:42px;height:42px;background:rgba(255,255,255,.18);backdrop-filter:blur(4px);border-radius:12px;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center">
+          <i class="fa fa-sign-out"></i>
+        </button>
+      </div>
+    </div>
+
+    <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:16px;max-width:480px;width:100%;margin:0 auto;padding-bottom:32px">
+
+      <!-- ✅ BAGIAN PROGRES YANG DIPERINDAH -->
+      <div class="card" style="padding:18px">
+        <div style="text-align:center;font-weight:700;font-size:14px;color:var(--text-color);margin-bottom:14px;letter-spacing:0.3px">🐑 PROGRES DISTRIBUSI</div>
+        <div id="daftarProgres" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+      </div>
+
+      <div class="card" style="padding:18px">
+        <div style="font-weight:700;font-size:14px;color:var(--text-color);margin-bottom:12px">🔍 Cari Data</div>
+        <div style="display:flex;gap:10px">
+          <input type="text" id="kataSearch" autocomplete="off" autocorrect="off" autocapitalize="none"
+            style="flex:1;padding:14px 16px;border:1.5px solid var(--border-color);border-radius:14px;outline:none;min-width:0;transition:border 0.2s"
+            placeholder="Masukkan [No. Kupon]..."
+            onfocus="this.style.borderColor='#165DFF'"
+            onblur="this.style.borderColor='var(--border-color)'">
+          <button onclick="cariData()"
+            style="background:linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);color:#fff;border-radius:14px;padding:0 22px;font-weight:700;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(22, 93, 255, 0.15)">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+
+        <div id="hasilCari" class="scrollbar-hide" style="margin-top:12px;max-height:42vh;overflow-y:auto"></div>
+      </div>
+
+      <div id="hasilProses" class="fade-in card"
+        style="display:none;border-radius:16px;padding:16px;text-align:center;font-weight:600;font-size:15px;line-height:1.6;box-shadow:0 4px 16px var(--shadow-color)">
+        <p id="teksHasil" style="margin:0"></p>
+      </div>
+
+    </div>
+  </div>  
+
+  <!-- ═══════════ POPUP KONFIRMASI ═══════════ -->
+  <div id="popupKonfirmasi" class="sheet-overlay" style="display:none">
+    <div class="sheet-box">
+      <div class="isi-konfirmasi">
+Pastikan (No. Kupon) sudah benar
+Agar penerima Kurban tepat sasaran
+-----
+No Kupon : <span id="konfirm_id_qr"></span>
+           <span id="konfirm_nama"></span> - <span id="konfirm_rt"></span>
+-----
+Yakin data ini akan di update (Menerima)?
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="jawabTidak()"
+          style="background:var(--bg-input);color:var(--text-color);border-radius:12px;font-weight:600;font-size:15px">
+          ❌ No
+        </button>
+        <button onclick="jawabYes()"
+          style="background:linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);color:#fff;border-radius:12px;font-weight:600;font-size:15px">
+          ✅ Yes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ POPUP SUDAH DIAMBIL ═══════════ -->
+  <div id="popupSudahDiambil" class="sheet-overlay" style="display:none">
+    <div class="sheet-box">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="width:56px;height:56px;background:rgba(22, 163, 74, 0.15);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+          <i class="fa fa-check-circle" style="color:#00B42A;font-size:28px"></i>
+        </div>
+        <div style="font-weight:700;font-size:17px;color:var(--text-color)">Sudah Diambil</div>
+        <p style="color:var(--text-muted);font-size:14px;margin:6px 0 0">Daging Qurban sudah diambil 😊</p>
+      </div>
+      <button onclick="tutupPopupInfo()"
+        style="width:100%;background:linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);color:#fff;border-radius:12px;font-weight:600;font-size:15px">
+        OK, Mengerti
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════ POPUP TIDAK DITEMUKAN ═══════════ -->
+  <div id="popupTidakDitemukan" class="sheet-overlay" style="display:none">
+    <div class="sheet-box">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="width:56px;height:56px;background:rgba(245, 63, 63, 0.15);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+          <i class="fa fa-exclamation-circle" style="color:#F53F3F;font-size:28px"></i>
+        </div>
+        <div style="font-weight:700;font-size:17px;color:var(--text-color)">Tidak Ditemukan</div>
+        <p style="color:var(--text-muted);font-size:14px;margin:6px 0 0">Data tidak ditemukan atau input kosong</p>
+      </div>
+      <button onclick="tutupPopupTidakDitemukan()"
+        style="width:100%;background:linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);color:#fff;border-radius:12px;font-weight:600;font-size:15px">
+        OK
+      </button>
+    </div>
+  </div>
+
+  <script>
+    var namaPengguna = "";
+    var dataTerpilih = null;
+    var dataSementara = null;
+    var intervalProses; // Variabel untuk pembaruan otomatis
+
+    // ✅ FUNGSI FULL SCREEN
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // ✅ FUNGSI GANTI MODE & SAMAKAN KEDUA TOGGLE
+    const toggleLogin = document.getElementById('modeToggleLogin');
+    const toggleMain  = document.getElementById('modeToggleMain');
+
+    function setMode(isDark) {
+      if (isDark) {
+        document.body.classList.remove('light-mode');
+        localStorage.setItem('modePref', 'dark');
+      } else {
+        document.body.classList.add('light-mode');
+        localStorage.setItem('modePref', 'light');
+      }
+      // Samakan posisi sakelar
+      toggleLogin.checked = isDark;
+      toggleMain.checked  = isDark;
+    }
+
+    // Jalankan saat sakelar diubah
+    toggleLogin.addEventListener('change', () => setMode(toggleLogin.checked));
+    toggleMain.addEventListener('change', () => setMode(toggleMain.checked));
+
+    // Cek preferensi saat buka halaman
+    window.onload = function() {
+      const simpanMode = localStorage.getItem('modePref');
+      if(simpanMode === 'light') {
+        setMode(false);
+      } else {
+        setMode(true); // Default Dark Mode
+      }
+    };
+
+    window.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("kataSearch").addEventListener("keyup", function(e) {
+        if (e.key === "Enter") cariData();
+      });
+    });
+
+    function loginAkun() {
+      var user = document.getElementById("user").value.trim();
+      var pass = document.getElementById("pass").value.trim();
+      if (!user || !pass) { tampilkanPopupTidakDitemukan(); return; }
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.status) {
+            namaPengguna = res.nama;
+            document.getElementById("namaPetugas").innerText = "Petugas: " + namaPengguna;
+            document.getElementById("halamanLogin").style.display = "none";
+            document.getElementById("halamanUtama").style.display = "flex";
+            toggleFullScreen();
+            muatProgres();
+            // ✅ MULAI PEMBARUAN OTOMATIS SETIAP 5 DETIK
+            intervalProses = setInterval(muatProgres, 5000);
+          } else {
+            tampilkanPopupTidakDitemukan();
+          }
+        })
+        .withFailureHandler(function() { tampilkanPopupTidakDitemukan(); })
+        .cekLogin(user, pass);
+    }
+
+    function keluarAkun() {
+      if (confirm("Yakin ingin keluar?")) {
+        // ✅ HENTIKAN PEMBARUAN OTOMATIS SAAT KELUAR
+        clearInterval(intervalProses);
+        document.getElementById("halamanUtama").style.display = "none";
+        document.getElementById("halamanLogin").style.display = "flex";
+        toggleFullScreen();
+        document.getElementById("user").value = "";
+        document.getElementById("pass").value = "";
+      }
+    }
+
+    /* ── PROGRES DENGAN WARNA KEKINIAN ── */
+    function muatProgres() {
+      google.script.run.withSuccessHandler(function(data) {
+        var html = "";
+        data.forEach(function(item) {
+          let kelasWarna, warnaBar;
+          if (item.persen < 50) {
+            kelasWarna = "grad-kurang";
+            warnaBar = "#FFB3B3";
+          } else if (item.persen < 100) {
+            kelasWarna = "grad-setengah";
+            warnaBar = "#FFE0B2";
+          } else {
+            kelasWarna = "grad-ok";
+            warnaBar = "#B7F0D0";
+          }
+
+          html += `<div class="progress-card ${kelasWarna}">
+            <h4>${item.rt}</h4>
+            <div class="angka">${item.sudah} / ${item.total}</div>
+            <div class="persen">${item.persen}%</div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width:${item.persen}%; background:${warnaBar}"></div>
+            </div>
+          </div>`;
+        });
+        document.getElementById("daftarProgres").innerHTML = html;
+      }).hitungProgres();
+    }
+
+    function prosesKode(kode) {
+      google.script.run.withSuccessHandler(function(res) {
+        var el  = document.getElementById("hasilProses");
+        var tek = document.getElementById("teksHasil");
+        el.style.display = "block";
+
+        if (res.hasil === "sukses") {
+          if(document.body.classList.contains('light-mode')) {
+            el.style.background = "#f0fdf4"; el.style.color = "#065f46";
+          } else {
+            el.style.background = "rgba(22, 163, 74, 0.15)"; el.style.color = "#4ADE80";
+          }
+          tek.innerHTML = "✅ " + res.pesan + "<br><strong>" + res.data.nama + "</strong> — " + res.data.rt;
+          bersihkan();
+          setTimeout(function() { el.style.display = "none"; }, 2500);
+
+        } else if (res.hasil === "sudah") {
+          if(document.body.classList.contains('light-mode')) {
+            el.style.background = "#fffbeb"; el.style.color = "#92400e";
+          } else {
+            el.style.background = "rgba(234, 120, 0, 0.15)"; el.style.color = "#FFB347";
+          }
+          tek.innerHTML = "⚠️ " + res.pesan + "<br><strong>" + res.data.nama + "</strong> — " + res.data.rt;
+          bersihkan();
+          setTimeout(function() { el.style.display = "none"; }, 2500);
+
+        } else {
+          if(document.body.classList.contains('light-mode')) {
+            el.style.background = "#fef2f2"; el.style.color = "#991b1b";
+          } else {
+            el.style.background = "rgba(245, 63, 63, 0.15)"; el.style.color = "#FF8080";
+          }
+          tek.innerHTML = "❌ " + res.pesan;
+          bersihkan();
+          setTimeout(function() { el.style.display = "none"; }, 2500);
+        }
+      }).prosesData(kode, namaPengguna);
+    }
+
+    function cariData() {
+      var kunci = document.getElementById("kataSearch").value.trim();
+      if (!kunci) { tampilkanPopupTidakDitemukan(); return; }
+      cekStatusData(kunci);
+    }
+
+    function cekStatusData(kunci) {
+      google.script.run.withSuccessHandler(function(hasil) {
+        if (hasil.length === 0) { tampilkanPopupTidakDitemukan(); return; }
+
+        var html = "";
+        hasil.forEach(function(item) {
+          var sudah = item.status === "SUDAH DIAMBIL";
+          var badgeStyle = sudah
+            ? "font-size:11px;font-weight:700;padding:4px 10px;border-radius:10px;background:rgba(22, 163, 74, 0.15);color:#4ADE80;white-space:nowrap;flex-shrink:0"
+            : "font-size:11px;font-weight:700;padding:4px 10px;border-radius:10px;background:rgba(245, 63, 63, 0.15);color:#FF8080;white-space:nowrap;flex-shrink:0";
+
+          html += '<div class="kartu-cari">'
+            + '<div style="min-width:0;overflow:hidden">'
+            + '<div style="font-weight:700;color:var(--btn-color);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + item.id_qr + '</div>'
+            + '<div style="font-size:13px;color:var(--text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">' + item.nama + '</div>'
+            + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + item.rt + '</div>'
+            + '</div>'
+            + '<span style="' + badgeStyle + '">' + (sudah ? "✅ Diambil" : "⏳ Belum") + '</span>'
+            + '</div>';
+        });
+        document.getElementById("hasilCari").innerHTML = html;
+
+        var item = hasil[0];
+        setTimeout(function() {
+          if (item.status === "SUDAH DIAMBIL") {
+            document.getElementById("popupSudahDiambil").style.display = "flex";
+          } else {
+            // ✅ MENGISI DATA KE POPUP KONFIRMASI
+            document.getElementById("konfirm_id_qr").innerText = item.id_qr;
+            document.getElementById("konfirm_nama").innerText = item.nama;
+            document.getElementById("konfirm_rt").innerText = item.rt;
+            
+            dataTerpilih = item.id_qr;
+            document.getElementById("popupKonfirmasi").style.display = "flex";
+          }
+        }, 200);
+
+      }).cariData(kunci);
+    }
+
+    function jawabYes() {
+      document.getElementById("popupKonfirmasi").style.display = "none";
+      if (dataTerpilih) prosesKode(dataTerpilih);
+      dataTerpilih = null;
+    }
+    function jawabTidak() {
+      document.getElementById("popupKonfirmasi").style.display = "none";
+      dataTerpilih = null; bersihkan();
+    }
+    function tutupPopupInfo() {
+      document.getElementById("popupSudahDiambil").style.display = "none";
+      bersihkan();
+    }
+    function tampilkanPopupTidakDitemukan() {
+      document.getElementById("popupTidakDitemukan").style.display = "flex";
+    }
+    function tutupPopupTidakDitemukan() {
+      document.getElementById("popupTidakDitemukan").style.display = "none";
+      document.getElementById("kataSearch").value = "";
+      setTimeout(function() { document.getElementById("kataSearch").focus(); }, 100);
+    }
+
+    function bersihkan() {
+      document.getElementById("hasilCari").innerHTML = "";
+      document.getElementById("kataSearch").value = "";
+      setTimeout(function() { document.getElementById("kataSearch").focus(); }, 100);
+    }
+  </script>
+</body>
+</html>
